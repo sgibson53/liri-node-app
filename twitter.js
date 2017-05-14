@@ -11,13 +11,15 @@ var client = new Twitter({
 
 var params = {screen_name: 'sethg4thdown'};
 
-function getTweets() {
+function getTweets(callback) {
     client.get('statuses/user_timeline', params, function(error, tweets, response) {
         if (!error) {
             tweets.forEach(function(tweet) {
                 console.log(tweet.created_at);
                 console.log(tweet.text);
             });
+
+            callback();
         } else {
             console.log(error);
         }
