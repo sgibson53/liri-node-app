@@ -1,10 +1,18 @@
 var getTweets = require('./twitter');
+var getMovieInfo = require('./omdb');
+var getSong = require('./spotify');
+var fs = require('fs');
 
 var userFinished = false;
 
 /* Inquirer Setup */
 var inquirer = require("inquirer");
-/* End Inquirer Setup */
+
+// Read in random.txt
+fs.readFile('./random.txt', 'utf8', function(err, data) {
+    if (err) return console.log(err);
+    random = data.split(',');
+});
 
 console.log('\n\nWelcome to Liri! The lame version of Siri.\n\n');
 console.log("There are four available commands you can use. See descriptions below:\n");
@@ -38,19 +46,39 @@ function processRequest() {
     }).then(function(value) {
 
         value = value.query.split(' ');
+        phrase = value.slice(0);
+        phrase.shift();
 
         switch(value[0]) {
             case ('my-tweets'):
-                console.log('\n');
                 getTweets(function() {
                     goAgain();
                 });
                 break;
             case ('movie-this'):
-                console.log("Performing movie-this");
-                goAgain();
+                var title = (phrase.length == 0) ? "mr+nobody" : phrase.join('+');
+                getMovieInfo(title, function() {
+                    goAgain();
+                })
+                break;
+            case ('spotify-this-song'):
+                getSong(phrase.join(' '), function(err, data) {
+                    if (err) console.log(err);
+                    goAgain();
+                })
+                break;
+            case ('do-what-it-says'):
+                random[1] = random[1].slice(1, random[1].length-2);  // take out quotes
+                if (random[0] == 'spotify-this-song') {
+                    getSong(random[1], function(err, data) {
+                        if (err) console.log(err);
+                        goAgain();
+                    })
+                }
                 break;
         }
+
+        
     });
 
 
@@ -60,6 +88,7 @@ function processRequest() {
 }
 
 function goAgain() {
+    console.log('\n');
     inquirer.prompt({
         type: 'confirm',
         name: 'enterAnotherQuery',
@@ -73,6 +102,3 @@ function goAgain() {
     });
 }
 
-// process.exit();
-
-// getTweets();
